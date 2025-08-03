@@ -1,6 +1,8 @@
 #!/bin/bash
 # setting NDK_ROOT root
-export NDK_ROOT=/opt/android-ndk-r20b
+# export NDK_ROOT=/opt/android-ndk-r20b
+export NDK_ROOT=/usr/local/android_sdk/ndk/android-ndk-r22b
+
 echo "NDK_ROOT is ${NDK_ROOT}"
 # build
 cd $(pwd)/src
@@ -41,6 +43,7 @@ fi
 
 cp ./src/build/ppocr_demo ./ppocr_demo
 cp ${PADDLE_LITE_DIR}/libs/${ARM_ABI}/libc++_shared.so ./ppocr_demo
+cp ${OPENCV_LITE_DIR}/${ARM_ABI}/libs/libopencv_java4.so ./ppocr_demo
 cp ${PADDLE_LITE_DIR}/libs/${ARM_ABI}/libpaddle_light_api_shared.so ./ppocr_demo
 
 echo "copy successful!"
