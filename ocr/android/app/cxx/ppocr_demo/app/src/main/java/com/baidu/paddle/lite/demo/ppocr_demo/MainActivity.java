@@ -72,7 +72,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
+   /*     switch (v.getId()) {
             case R.id.btn_switch:
                 svPreview.switchCamera();
                 break;
@@ -83,7 +83,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
                 }
                 Toast.makeText(MainActivity.this, "Save snapshot to " + savedImagePath, Toast.LENGTH_SHORT).show();
                 break;
-        }
+        }*/
     }
 
     @Override

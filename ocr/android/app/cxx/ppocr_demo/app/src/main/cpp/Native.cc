@@ -73,8 +73,9 @@ Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeProcess(
   }
   std::string savedImagePath = jstring_to_cpp_string(env, jsavedImagePath);
   Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
-  return pipeline->Process_val(inTextureId, outTextureId, textureWidth,
-                               textureHeight, savedImagePath);
+//  return pipeline->Process_val(inTextureId, outTextureId, textureWidth,
+//                               textureHeight, savedImagePath);
+    return NULL;
 }
 
 #ifdef __cplusplus

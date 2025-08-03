@@ -12,12 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//
-// Created by chenjiao04 on 2021/12/4.
-//
-
-#include "rec_process.h"
-#include "utils.h"
+#include "rec_process.h" // NOLINT
+#include "utils.h"       // NOLINT
 
 const std::vector<int> rec_image_shape{3, 32, 320};
 
@@ -27,7 +23,7 @@ cv::Mat CrnnResizeImg(cv::Mat img, float wh_ratio) {
   imgW = rec_image_shape[2];
   imgH = rec_image_shape[1];
 
-  imgW = int(32 * wh_ratio);
+  imgW = static_cast<int>(32 * wh_ratio);
 
   float ratio = static_cast<float>(img.cols) / static_cast<float>(img.rows);
   int resize_w, resize_h;
@@ -92,11 +88,12 @@ RecPredictor::Postprocess(const cv::Mat &rgbaImage,
   float max_value = 0.0f;
 
   for (int n = 0; n < predict_shape[1]; n++) {
-    argmax_idx = int(Argmax(&predict_batch[n * predict_shape[2]],
-                            &predict_batch[(n + 1) * predict_shape[2]]));
-    max_value =
-        float(*std::max_element(&predict_batch[n * predict_shape[2]],
+    argmax_idx =
+        static_cast<int>(Argmax(&predict_batch[n * predict_shape[2]],
                                 &predict_batch[(n + 1) * predict_shape[2]]));
+    max_value = static_cast<float>(
+        *std::max_element(&predict_batch[n * predict_shape[2]],
+                          &predict_batch[(n + 1) * predict_shape[2]]));
     if (argmax_idx > 0 && (!(n > 0 && argmax_idx == last_index))) {
       score += max_value;
       count += 1;

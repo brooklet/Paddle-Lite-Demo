@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "pipeline.h"
-#include <iostream>
+#include "pipeline.h" // NOLINT
+#include <algorithm>  // NOLINT
+#include <iostream>   // NOLINT
 
 cv::Mat GetRotateCropImage(cv::Mat srcimage,
                            std::vector<std::vector<int>> box) {
@@ -23,10 +24,10 @@ cv::Mat GetRotateCropImage(cv::Mat srcimage,
 
   int x_collect[4] = {box[0][0], box[1][0], box[2][0], box[3][0]};
   int y_collect[4] = {box[0][1], box[1][1], box[2][1], box[3][1]};
-  int left = int(*std::min_element(x_collect, x_collect + 4));
-  int right = int(*std::max_element(x_collect, x_collect + 4));
-  int top = int(*std::min_element(y_collect, y_collect + 4));
-  int bottom = int(*std::max_element(y_collect, y_collect + 4));
+  int left = static_cast<int>(*std::min_element(x_collect, x_collect + 4));
+  int right = static_cast<int>(*std::max_element(x_collect, x_collect + 4));
+  int top = static_cast<int>(*std::min_element(y_collect, y_collect + 4));
+  int bottom = static_cast<int>(*std::max_element(y_collect, y_collect + 4));
 
   cv::Mat img_crop;
   image(cv::Rect(left, top, right - left, bottom - top)).copyTo(img_crop);
@@ -95,10 +96,10 @@ std::vector<std::string> split(const std::string &str,
   if ("" == str)
     return res;
   char *strs = new char[str.length() + 1];
-  std::strcpy(strs, str.c_str());
+  std::strcpy(strs, str.c_str()); // NOLINT
 
   char *d = new char[delim.length() + 1];
-  std::strcpy(d, delim.c_str());
+  std::strcpy(d, delim.c_str()); // NOLINT
 
   char *p = std::strtok(strs, d);
   while (p) {
@@ -138,73 +139,11 @@ cv::Mat Visualization(cv::Mat srcimg,
     int npt[] = {4};
     cv::polylines(img_vis, ppt, npt, 1, 1, CV_RGB(0, 255, 0), 2, 8, 0);
   }
-  cv::Mat img_vis_bgr;
-  cv::cvtColor(img_vis, img_vis_bgr, cv::COLOR_RGBA2BGR);
-  cv::imwrite(output_image_path, img_vis_bgr);
+
+  cv::imwrite(output_image_path, img_vis);
+  std::cout << "The detection visualized image saved in "
+            << output_image_path.c_str() << std::endl;
   return img_vis;
-}
-
-void Pipeline::VisualizeResults(std::vector<std::string> rec_text,
-                                std::vector<float> rec_text_score,
-                                cv::Mat *rgbaImage,
-                                double *visualizeResultsTime) {
-  auto t = GetCurrentTime();
-  char text[255];
-  cv::Scalar color = cv::Scalar(255, 255, 255);
-  int font_face = cv::FONT_HERSHEY_PLAIN;
-  double font_scale = 1.f;
-  float thickness = 1;
-  sprintf(text, "OCR results");
-  cv::Size text_size =
-      cv::getTextSize(text, font_face, font_scale, thickness, nullptr);
-  text_size.height *= 1.25f;
-  cv::Point2d offset(10, text_size.height + 15);
-  cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-              thickness);
-
-  for (int i = 0; i < rec_text.size(); i++) {
-    LOGD("debug=== line %d %s, %f", i, rec_text[i].c_str(), rec_text_score[i]);
-    sprintf(text, "line: %d %s  %f", i, rec_text[i].c_str(), rec_text_score[i]);
-    offset.y += text_size.height;
-    cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-                thickness);
-  }
-  *visualizeResultsTime = GetElapsedTime(t);
-  LOGD("VisualizeResults costs %f ms", *visualizeResultsTime);
-}
-
-void Pipeline::VisualizeStatus(double readGLFBOTime, double writeGLTextureTime,
-                               double predictTime,
-                               std::vector<std::string> rec_text,
-                               std::vector<float> rec_text_score,
-                               double visualizeResultsTime,
-                               cv::Mat *rgbaImage) {
-  char text[255];
-  cv::Scalar color = cv::Scalar(255, 255, 255);
-  int font_face = cv::FONT_HERSHEY_PLAIN;
-  double font_scale = 1.f;
-  float thickness = 1;
-  sprintf(text, "Read GLFBO time: %.1f ms", readGLFBOTime);
-  cv::Size text_size =
-      cv::getTextSize(text, font_face, font_scale, thickness, nullptr);
-  text_size.height *= 1.25f;
-  cv::Point2d offset(10, text_size.height + 15);
-  cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-              thickness);
-  sprintf(text, "Write GLTexture time: %.1f ms", writeGLTextureTime);
-  offset.y += text_size.height;
-  cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-              thickness);
-  // predict time
-  sprintf(text, "OCR all process time: %.1f ms", predictTime);
-  offset.y += text_size.height;
-  cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-              thickness);
-  // Visualize results
-  sprintf(text, "Visualize results time: %.1f ms", visualizeResultsTime);
-  offset.y += text_size.height;
-  cv::putText(*rgbaImage, text, offset, font_face, font_scale, color,
-              thickness);
 }
 
 Pipeline::Pipeline(const std::string &detModelDir,
@@ -221,30 +160,18 @@ Pipeline::Pipeline(const std::string &detModelDir,
       new RecPredictor(recModelDir, cPUThreadNum, cPUPowerMode));
   Config_ = LoadConfigTxt(config_path);
   charactor_dict_ = ReadDict(dict_path);
-  charactor_dict_.insert(charactor_dict_.begin(), "#"); // blank char for ctc
+  charactor_dict_.insert(charactor_dict_.begin(), "#"); // NOLINT
   charactor_dict_.push_back(" ");
 }
 
-bool Pipeline::Process_val(int inTextureId, int outTextureId, int textureWidth,
-                           int textureHeight, std::string savedImagePath) {
-  double readGLFBOTime = 0, writeGLTextureTime = 0;
-  double visualizeResultsTime = 0, predictTime = 0;
-  int height = 448;
-  int width = 448;
-  cv::Mat rgbaImage;
-  CreateRGBAImageFromGLFBOTexture(textureWidth, textureHeight, &rgbaImage,
-                                  &readGLFBOTime);
-  // change to 3-channel
-  cv::Mat bgrImage;
-  cv::cvtColor(rgbaImage, bgrImage, cv::COLOR_RGBA2BGR);
-  cv::Mat bgrImage_resize;
-  cv::resize(bgrImage, bgrImage_resize, cv::Size(width, height));
-
-  int use_direction_classify = int(Config_["use_direction_classify"]);
+bool Pipeline::Process(std::string img_path, std::string output_img_path) {
+  cv::Mat rgbaImage = cv::imread(img_path, cv::IMREAD_COLOR);
+  int use_direction_classify =
+      static_cast<int>(Config_["use_direction_classify"]);
   cv::Mat srcimg;
-  bgrImage_resize.copyTo(srcimg);
-  // Stage1: rec
-  auto t = GetCurrentTime();
+  rgbaImage.copyTo(srcimg);
+
+  auto start = std::chrono::system_clock::now();
   // det predict
   auto boxes =
       detPredictor_->Predict(srcimg, Config_, nullptr, nullptr, nullptr);
@@ -253,12 +180,11 @@ bool Pipeline::Process_val(int inTextureId, int outTextureId, int textureWidth,
   std::vector<float> scale = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
 
   cv::Mat img;
-  bgrImage_resize.copyTo(img);
+  rgbaImage.copyTo(img);
   cv::Mat crop_img;
 
   std::vector<std::string> rec_text;
   std::vector<float> rec_text_score;
-  LOGD("debug===boxes: %d", boxes.size());
   for (int i = boxes.size() - 1; i >= 0; i--) {
     crop_img = GetRotateCropImage(img, boxes[i]);
     if (use_direction_classify >= 1) {
@@ -270,18 +196,44 @@ bool Pipeline::Process_val(int inTextureId, int outTextureId, int textureWidth,
     rec_text.push_back(res.first);
     rec_text_score.push_back(res.second);
   }
-  predictTime = GetElapsedTime(t);
-  // visualization
-  auto img_res = Visualization(bgrImage_resize, boxes, savedImagePath);
-  cv::Mat img_vis;
-  cv::resize(img_res, img_vis, cv::Size(textureWidth, textureHeight));
-  cv::cvtColor(img_vis, img_vis, cv::COLOR_BGR2RGBA);
-  // show ocr results on image
-  //  VisualizeResults(rec_text, rec_text_score, &img_vis,
-  //  &visualizeResultsTime);
-  VisualizeStatus(readGLFBOTime, writeGLTextureTime, predictTime, rec_text,
-                  rec_text_score, visualizeResultsTime, &img_vis);
-
-  WriteRGBAImageBackToGLTexture(img_vis, outTextureId, &writeGLTextureTime);
+  auto end = std::chrono::system_clock::now();
+  auto duration =
+      std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+  //// visualization
+  auto img_vis = Visualization(rgbaImage, boxes, output_img_path);
+  // print recognized text
+  for (int i = 0; i < rec_text.size(); i++) {
+    std::cout << i << "\t" << rec_text[i] << "\t" << rec_text_score[i]
+              << std::endl;
+  }
+  std::cout << "花费了"
+            << double(duration.count()) *
+                   std::chrono::microseconds::period::num /
+                   std::chrono::microseconds::period::den
+            << "秒" << std::endl;
   return true;
+}
+
+int main(int argc, char **argv) {
+  if (argc < 7) {
+    std::cerr << "[ERROR] usage: "
+              << " ./ocr_db_crnn_demo det_model_file cls_model_file "
+                 "rec_model_file image_path"
+                 " output_image_path charactor_dict config\n";
+    exit(1);
+  }
+  std::string det_model_file = argv[1];
+  std::string rec_model_file = argv[2];
+  std::string cls_model_file = argv[3];
+  std::string img_path = argv[4];
+  std::string output_img_path = argv[5];
+  std::string dict_path = argv[6];
+  std::string config_path = argv[7];
+  std::string cPUPowerMode = "";
+  int cPUThreadNum = 1;
+  Pipeline *pipe =
+      new Pipeline(det_model_file, cls_model_file, rec_model_file, cPUPowerMode,
+                   cPUThreadNum, config_path, dict_path);
+  pipe->Process(img_path, output_img_path);
+  return 0;
 }

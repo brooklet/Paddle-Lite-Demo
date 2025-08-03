@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//
-// Created by chenjiao04 on 2021/12/4.
-//
-
-#include "cls_process.h"
+#include "cls_process.h" // NOLINT
+#include <memory>        // NOLINT
+#include <string>        // NOLINT
+#include <utility>       // NOLINT
+#include <vector>        // NOLINT
 
 const std::vector<int> cls_image_shape{3, 48, 192};
 cv::Mat ClsResizeImg(cv::Mat img) {
@@ -31,7 +31,7 @@ cv::Mat ClsResizeImg(cv::Mat img) {
   if (ceilf(imgH * ratio) > imgW)
     resize_w = imgW;
   else
-    resize_w = int(ceilf(imgH * ratio));
+    resize_w = static_cast<int>(ceilf(imgH * ratio));
   cv::Mat resize_img;
   cv::resize(img, resize_img, cv::Size(resize_w, imgH), 0.f, 0.f,
              cv::INTER_LINEAR);

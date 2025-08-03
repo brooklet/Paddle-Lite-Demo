@@ -3,19 +3,23 @@ import java.security.MessageDigest
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    namespace "com.baidu.paddle.lite.demo.ppocr_demo"
+    buildToolsVersion '35.0.1'
+    compileSdkVersion 35
     defaultConfig {
         applicationId "com.baidu.paddle.lite.demo.object_detection"
-        minSdkVersion 15
-        targetSdkVersion 28
+        minSdkVersion 23
+        targetSdkVersion 35
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                arguments '-DANDROID_PLATFORM=android-23', '-DANDROID_STL=c++_shared', "-DANDROID_TOOLCHAIN="
+//                arguments '-DANDROID_PLATFORM=android-23', '-DANDROID_STL=c++_shared', "-DANDROID_TOOLCHAIN="
+                arguments '-DANDROID_PLATFORM=android-21'
                 abiFilters 'arm64-v8a', 'armeabi-v7a'
-                cppFlags "-std=c++11 -mfpu=neon"
+//                cppFlags "-std=c++11 -mfpu=neon"
+//                cppFlags "-std=c++11"
             }
         }
     }
@@ -31,6 +35,9 @@ android {
             version "3.10.2"
         }
     }
+
+    // NDK 版本。不能升级到22及以上版本，会出现 ld: error: found local symbol '__bss_start' in global part of symbol table in file 错误
+    ndkVersion "21.4.7075529"
 }
 
 dependencies {
@@ -45,7 +52,7 @@ dependencies {
 
 def archives = [
         [
-                'src' : 'https://paddlelite-demo.bj.bcebos.com/libs/android/paddle_lite_libs_v2_10_rc.tar.gz',
+                'src' : 'https://paddlelite-demo.bj.bcebos.com/paddle-x/libs/android/paddle_lite_libs_v2_14_rc_gpu.tar.gz',
                 'dest': 'PaddleLite'
         ],
         [

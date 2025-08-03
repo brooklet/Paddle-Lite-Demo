@@ -13,15 +13,17 @@
 // limitations under the License.
 
 #pragma once
-#include "opencv2/core.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/imgproc.hpp"
-#include "paddle_api.h"
-#include "utils.h"
+#include "opencv2/core.hpp"       // NOLINT
+#include "opencv2/imgcodecs.hpp"  // NOLINT
+#include "opencv2/imgproc.hpp"    // NOLINT
+#include "paddle_api.h"           // NOLINT
+#include "utils.h"                // NOLINT
+#include <memory>                 // NOLINT
+#include <string>                 // NOLINT
 using namespace paddle::lite_api; // NOLINT
 
 class ClsPredictor {
-public:
+public: // NOLINT
   explicit ClsPredictor(const std::string &modelDir, const int cpuThreadNum,
                         const std::string &cpuPowerMode);
 
@@ -29,10 +31,10 @@ public:
                   double *predictTime, double *postprocessTime,
                   const float thresh);
 
-private:
+private: // NOLINT
   void Preprocess(const cv::Mat &rgbaImage);
   cv::Mat Postprocess(const cv::Mat &img, const float thresh);
 
-private:
+private: // NOLINT
   std::shared_ptr<paddle::lite_api::PaddlePredictor> predictor_;
 };
