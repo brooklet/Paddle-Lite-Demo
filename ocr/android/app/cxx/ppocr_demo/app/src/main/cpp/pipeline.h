@@ -37,6 +37,7 @@ public:
     bool Process_val(int inTextureId, int outTextureId, int textureWidth,
                      int textureHeight, std::string savedImagePath);
 
+    bool Process(std::string img_path, std::string output_img_path);
 private:
     // Read pixels from FBO texture to CV image
     void CreateRGBAImageFromGLFBOTexture(int textureWidth, int textureHeight,

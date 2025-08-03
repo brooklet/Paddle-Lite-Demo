@@ -285,3 +285,53 @@ bool Pipeline::Process_val(int inTextureId, int outTextureId, int textureWidth,
     WriteRGBAImageBackToGLTexture(img_vis, outTextureId, &writeGLTextureTime);
     return true;
 }
+
+bool Pipeline::Process(std::string img_path, std::string output_img_path) {
+    cv::Mat rgbaImage = cv::imread(img_path, cv::IMREAD_COLOR);
+    int use_direction_classify =
+            static_cast<int>(Config_["use_direction_classify"]);
+    cv::Mat srcimg;
+    rgbaImage.copyTo(srcimg);
+
+    auto start = std::chrono::system_clock::now();
+    // det predict
+    auto boxes =
+            detPredictor_->Predict(srcimg, Config_, nullptr, nullptr, nullptr);
+
+    std::vector<float> mean = {0.5f, 0.5f, 0.5f};
+    std::vector<float> scale = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
+
+    cv::Mat img;
+    rgbaImage.copyTo(img);
+    cv::Mat crop_img;
+
+    std::vector<std::string> rec_text;
+    std::vector<float> rec_text_score;
+    for (int i = boxes.size() - 1; i >= 0; i--) {
+        crop_img = GetRotateCropImage(img, boxes[i]);
+        if (use_direction_classify >= 1) {
+            crop_img =
+                    clsPredictor_->Predict(crop_img, nullptr, nullptr, nullptr, 0.9);
+        }
+        auto res = recPredictor_->Predict(crop_img, nullptr, nullptr, nullptr,
+                                          charactor_dict_);
+        rec_text.push_back(res.first);
+        rec_text_score.push_back(res.second);
+    }
+    auto end = std::chrono::system_clock::now();
+    auto duration =
+            std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //// visualization
+    auto img_vis = Visualization(rgbaImage, boxes, output_img_path);
+    // print recognized text
+    for (int i = 0; i < rec_text.size(); i++) {
+        std::cout << i << "\t" << rec_text[i] << "\t" << rec_text_score[i]
+                  << std::endl;
+    }
+    std::cout << "花费了"
+              << double(duration.count()) *
+                 std::chrono::microseconds::period::num /
+                 std::chrono::microseconds::period::den
+              << "秒" << std::endl;
+    return true;
+}
