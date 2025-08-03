@@ -27,19 +27,19 @@ extern "C" {
  */
 JNIEXPORT jlong JNICALL
 Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeInit(
-    JNIEnv *env, jclass thiz, jstring jDetModelPath, jstring jClsModelPath,
-    jstring jRecModelPath, jstring jConfigPath, jstring jLabelPath,
-    jint cpuThreadNum, jstring jCPUPowerMode) {
-  std::string detModelPath = jstring_to_cpp_string(env, jDetModelPath);
-  std::string clsModelPath = jstring_to_cpp_string(env, jClsModelPath);
-  std::string recModelPath = jstring_to_cpp_string(env, jRecModelPath);
-  std::string configPath = jstring_to_cpp_string(env, jConfigPath);
-  std::string labelPath = jstring_to_cpp_string(env, jLabelPath);
-  std::string cpuPowerMode = jstring_to_cpp_string(env, jCPUPowerMode);
+        JNIEnv *env, jclass thiz, jstring jDetModelPath, jstring jClsModelPath,
+        jstring jRecModelPath, jstring jConfigPath, jstring jLabelPath,
+        jint cpuThreadNum, jstring jCPUPowerMode) {
+    std::string detModelPath = jstring_to_cpp_string(env, jDetModelPath);
+    std::string clsModelPath = jstring_to_cpp_string(env, jClsModelPath);
+    std::string recModelPath = jstring_to_cpp_string(env, jRecModelPath);
+    std::string configPath = jstring_to_cpp_string(env, jConfigPath);
+    std::string labelPath = jstring_to_cpp_string(env, jLabelPath);
+    std::string cpuPowerMode = jstring_to_cpp_string(env, jCPUPowerMode);
 
-  return reinterpret_cast<jlong>(
-      new Pipeline(detModelPath, clsModelPath, recModelPath, cpuPowerMode,
-                   cpuThreadNum, configPath, labelPath));
+    return reinterpret_cast<jlong>(
+            new Pipeline(detModelPath, clsModelPath, recModelPath, cpuPowerMode,
+                         cpuThreadNum, configPath, labelPath));
 }
 
 /*
@@ -51,12 +51,12 @@ JNIEXPORT jboolean JNICALL
 Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeRelease(JNIEnv *env,
                                                                  jclass thiz,
                                                                  jlong ctx) {
-  if (ctx == 0) {
-    return JNI_FALSE;
-  }
-  Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
-  delete pipeline;
-  return JNI_TRUE;
+    if (ctx == 0) {
+        return JNI_FALSE;
+    }
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
+    delete pipeline;
+    return JNI_TRUE;
 }
 
 /*
@@ -66,16 +66,15 @@ Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeRelease(JNIEnv *env,
  */
 JNIEXPORT jboolean JNICALL
 Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeProcess(
-    JNIEnv *env, jclass thiz, jlong ctx, jint inTextureId, jint outTextureId,
-    jint textureWidth, jint textureHeight, jstring jsavedImagePath) {
-  if (ctx == 0) {
-    return JNI_FALSE;
-  }
-  std::string savedImagePath = jstring_to_cpp_string(env, jsavedImagePath);
-  Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
-//  return pipeline->Process_val(inTextureId, outTextureId, textureWidth,
-//                               textureHeight, savedImagePath);
-    return NULL;
+        JNIEnv *env, jclass thiz, jlong ctx, jint inTextureId, jint outTextureId,
+        jint textureWidth, jint textureHeight, jstring jsavedImagePath) {
+    if (ctx == 0) {
+        return JNI_FALSE;
+    }
+    std::string savedImagePath = jstring_to_cpp_string(env, jsavedImagePath);
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
+    return pipeline->Process_val(inTextureId, outTextureId, textureWidth, textureHeight,
+                                 savedImagePath);
 }
 
 #ifdef __cplusplus

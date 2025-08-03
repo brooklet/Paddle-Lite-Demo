@@ -13,6 +13,9 @@ import android.view.Surface;
 import android.view.WindowManager;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class Utils {
@@ -219,6 +222,7 @@ public class Utils {
         String hardware = android.os.Build.HARDWARE;
         return hardware.equalsIgnoreCase("kirin810") || hardware.equalsIgnoreCase("kirin990");
     }
+
     public static void checkFile(String nnFileName) throws
             SDKExceptions.PathNotExist {
 
@@ -249,14 +253,23 @@ public class Utils {
             }
         }
 
-        // check SD card power
+/*        // check SD card power
         int perm = ctx.checkCallingOrSelfPermission("android.permission.WRITE_EXTERNAL_STORAGE");
         if (!(perm == PackageManager.PERMISSION_GRANTED)) {
             // Log.e(TAG, "please grant permission for SD storeage.");
             throw new SDKExceptions.NoSDCardPermission();
-        }
+        }*/
         // check whether file on SD card
-        File fileInSD = new File(ctx.getExternalFilesDir(null), nnFileName);
+
+        File fileInSD = new File(ctx.getCacheDir().toString(), nnFileName);
+        Path dir = Paths.get(fileInSD.getAbsolutePath()).getParent();
+        if (!dir.toFile().exists()) {
+            try {
+                Files.createDirectories(dir);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
         if (fileInSD.exists()) {
             Log.d("debug===", "NN model on SD card " + fileInSD);
@@ -267,7 +280,7 @@ public class Utils {
         OutputStream out = null;
         try {
             in = assetManager.open(nnFileName);
-            File outFile = new File(ctx.getExternalFilesDir(null), nnFileName);
+            File outFile = new File(ctx.getCacheDir().toString(), nnFileName);
             out = new FileOutputStream(outFile);
             byte[] buffer = new byte[1024];
             int read;

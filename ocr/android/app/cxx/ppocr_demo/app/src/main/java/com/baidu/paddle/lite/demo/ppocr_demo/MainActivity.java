@@ -39,10 +39,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     long lastFrameTime;
 
     // Model settings of object detection
-    protected String detModelPath = "ch_ppocr_mobile_v2.0_det_slim_opt.nb";
-    protected String recModelPath = "ch_ppocr_mobile_v2.0_rec_slim_opt.nb";
-    protected String clsModelPath = "ch_ppocr_mobile_v2.0_cls_slim_opt.nb";
-    protected String labelPath = "ppocr_keys_v1.txt";
+    protected String detModelPath = "models/pp-ocrv5_mobile_det.nb";
+    protected String recModelPath = "models/pp-ocrv5_mobile_rec.nb";
+    protected String clsModelPath = "models/pp-lcnet_x0_25_textline_ori.nb";
+    protected String labelPath = "labels/ppocr_keys_ocrv5.txt";
     protected String configPath = "config.txt";
     protected int cpuThreadNum = 1;
     protected String cpuPowerMode = "LITE_POWER_HIGH";
@@ -65,25 +65,22 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
         initView();
 
         // Check and request CAMERA and WRITE_EXTERNAL_STORAGE permissions
-        if (!checkAllPermissions()) {
+/*        if (!checkAllPermissions()) {
             requestAllPermissions();
-        }
+        }*/
     }
 
     @Override
     public void onClick(View v) {
-   /*     switch (v.getId()) {
-            case R.id.btn_switch:
-                svPreview.switchCamera();
-                break;
-            case R.id.btn_shutter:
-                SimpleDateFormat date = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-                synchronized (this) {
-                    savedImagePath = Utils.getDCIMDirectory() + File.separator + date.format(new Date()).toString() + ".png";
-                }
-                Toast.makeText(MainActivity.this, "Save snapshot to " + savedImagePath, Toast.LENGTH_SHORT).show();
-                break;
-        }*/
+        if (v.getId() == R.id.btn_switch) {
+            svPreview.switchCamera();
+        } else if (v.getId() == R.id.btn_switch) {
+            SimpleDateFormat date = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+            synchronized (this) {
+                savedImagePath = Utils.getDCIMDirectory() + File.separator + date.format(new Date()).toString() + ".png";
+            }
+            Toast.makeText(MainActivity.this, "Save snapshot to " + savedImagePath, Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -119,9 +116,9 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
         // Reload settings and re-initialize the predictor
         checkRun();
         // Open camera until the permissions have been granted
-        if (!checkAllPermissions()) {
+/*        if (!checkAllPermissions()) {
             svPreview.disableCamera();
-        }
+        }*/
         svPreview.onResume();
     }
 
@@ -150,51 +147,51 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     }
 
     public void checkRun() {
-            try {
+        try {
             Utils.copyAssets(this, labelPath);
             String labelRealDir = new File(
-                    this.getExternalFilesDir(null),
+                    this.getCacheDir().toString(),
                     labelPath).getAbsolutePath();
 
             Utils.copyAssets(this, configPath);
             String configRealDir = new File(
-                    this.getExternalFilesDir(null),
+                    this.getCacheDir().toString(),
                     configPath).getAbsolutePath();
 
             Utils.copyAssets(this, detModelPath);
             String detRealModelDir = new File(
-                    this.getExternalFilesDir(null),
+                    this.getCacheDir().toString(),
                     detModelPath).getAbsolutePath();
 
             Utils.copyAssets(this, clsModelPath);
             String clsRealModelDir = new File(
-                    this.getExternalFilesDir(null),
+                    this.getCacheDir().toString(),
                     clsModelPath).getAbsolutePath();
 
             Utils.copyAssets(this, recModelPath);
             String recRealModelDir = new File(
-                    this.getExternalFilesDir(null),
+                    this.getCacheDir().toString(),
                     recModelPath).getAbsolutePath();
 
-                predictor.init(
-                        this,
-                        detRealModelDir,
-                        clsRealModelDir,
-                        recRealModelDir,
-                        configRealDir,
-                        labelRealDir,
-                        cpuThreadNum,
-                        cpuPowerMode);
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
+            predictor.init(
+                    this,
+                    detRealModelDir,
+                    clsRealModelDir,
+                    recRealModelDir,
+                    configRealDir,
+                    labelRealDir,
+                    cpuThreadNum,
+                    cpuPowerMode);
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
+/*        if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
             new AlertDialog.Builder(MainActivity.this)
                     .setTitle("Permission denied")
                     .setMessage("Click to force quit the app, then open Settings->Apps & notifications->Target " +
@@ -206,7 +203,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
                             MainActivity.this.finish();
                         }
                     }).show();
-        }
+        }*/
     }
 
     private void requestAllPermissions() {

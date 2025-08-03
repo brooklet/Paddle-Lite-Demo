@@ -13,35 +13,67 @@
 // limitations under the License.
 
 #pragma once
-#include "cls_process.h"               // NOLINT
-#include "det_process.h"               // NOLINT
-#include "paddle_api.h"                // NOLINT
-#include "rec_process.h"               // NOLINT
-#include <EGL/egl.h>                   // NOLINT
-#include <GLES2/gl2.h>                 // NOLINT
-#include <map>                         // NOLINT
-#include <memory>                      // NOLINT
-#include <opencv2/core.hpp>            // NOLINT
-#include <opencv2/highgui/highgui.hpp> // NOLINT
-#include <opencv2/imgcodecs.hpp>       // NOLINT
-#include <opencv2/imgproc.hpp>         // NOLINT
-#include <string>                      // NOLINT
-#include <vector>                      // NOLINT
-using namespace paddle::lite_api;      // NOLINT
+#include "cls_process.h"
+#include "det_process.h"
+#include "paddle_api.h"
+#include "rec_process.h"
+#include <EGL/egl.h>
+#include <GLES2/gl2.h>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/imgproc.hpp>
+#include <string>
+#include <vector>
+using namespace paddle::lite_api; // NOLINT
 
 class Pipeline {
-public: // NOLINT
-  Pipeline(const std::string &detModelDir, const std::string &clsModelDir,
-           const std::string &recModelDir, const std::string &cPUPowerMode,
-           const int cPUThreadNum, const std::string &config_path,
-           const std::string &dict_path);
+public:
+    Pipeline(const std::string &detModelDir, const std::string &clsModelDir,
+             const std::string &recModelDir, const std::string &cPUPowerMode,
+             const int cPUThreadNum, const std::string &config_path,
+             const std::string &dict_path);
 
-  bool Process(std::string img_path, std::string output_img_path);
+    bool Process_val(int inTextureId, int outTextureId, int textureWidth,
+                     int textureHeight, std::string savedImagePath);
 
-private: // NOLINT
-  std::map<std::string, double> Config_;
-  std::vector<std::string> charactor_dict_;
-  std::shared_ptr<ClsPredictor> clsPredictor_;
-  std::shared_ptr<DetPredictor> detPredictor_;
-  std::shared_ptr<RecPredictor> recPredictor_;
+private:
+    // Read pixels from FBO texture to CV image
+    void CreateRGBAImageFromGLFBOTexture(int textureWidth, int textureHeight,
+                                         cv::Mat *rgbaImage,
+                                         double *readGLFBOTime) {
+        auto t = GetCurrentTime();
+        rgbaImage->create(textureHeight, textureWidth, CV_8UC4);
+        glReadPixels(0, 0, textureWidth, textureHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                     rgbaImage->data);
+        *readGLFBOTime = GetElapsedTime(t);
+        LOGD("Read from FBO texture costs %f ms", *readGLFBOTime);
+    }
+    // Write back to texture2D
+    void WriteRGBAImageBackToGLTexture(const cv::Mat &rgbaImage, int textureId,
+                                       double *writeGLTextureTime) {
+        auto t = GetCurrentTime();
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, rgbaImage.cols, rgbaImage.rows,
+                        GL_RGBA, GL_UNSIGNED_BYTE, rgbaImage.data);
+        *writeGLTextureTime = GetElapsedTime(t);
+        LOGD("Write back to texture2D costs %f ms", *writeGLTextureTime);
+    }
+    // Visualize the results to image
+    void VisualizeResults(std::vector<std::string> rec_text,
+                          std::vector<float> rec_text_score, cv::Mat *rgbaImage,
+                          double *visualizeResultsTime);
+    // Visualize the status(performace data) to image
+    void VisualizeStatus(double readGLFBOTime, double writeGLTextureTime,
+                         double predictTime, std::vector<std::string> rec_text,
+                         std::vector<float> rec_text_score,
+                         double visualizeResultsTime, cv::Mat *rgbaImage);
+
+private:
+    std::map<std::string, double> Config_;
+    std::vector<std::string> charactor_dict_;
+    std::shared_ptr<ClsPredictor> clsPredictor_;
+    std::shared_ptr<DetPredictor> detPredictor_;
+    std::shared_ptr<RecPredictor> recPredictor_;
 };
