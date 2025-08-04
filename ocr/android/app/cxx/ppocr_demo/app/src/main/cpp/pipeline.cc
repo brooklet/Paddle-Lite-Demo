@@ -14,6 +14,8 @@
 
 #include "pipeline.h"
 #include <iostream>
+#include <android/log.h>
+
 
 cv::Mat GetRotateCropImage(cv::Mat srcimage,
                            std::vector<std::vector<int>> box) {
@@ -287,28 +289,38 @@ bool Pipeline::Process_val(int inTextureId, int outTextureId, int textureWidth,
 }
 
 bool Pipeline::Process(std::string img_path, std::string output_img_path) {
+    LOGI("Process: %s, %s", img_path.c_str(), output_img_path.c_str());
+
     cv::Mat rgbaImage = cv::imread(img_path, cv::IMREAD_COLOR);
     int use_direction_classify =
             static_cast<int>(Config_["use_direction_classify"]);
     cv::Mat srcimg;
+    srcimg.release();
     rgbaImage.copyTo(srcimg);
+
+    LOGI("srcimg: %d, %d", srcimg.cols, srcimg.rows);
 
     auto start = std::chrono::system_clock::now();
     // det predict
     auto boxes =
             detPredictor_->Predict(srcimg, Config_, nullptr, nullptr, nullptr);
+    LOGI("boxes: %d", boxes.size());
 
-    std::vector<float> mean = {0.5f, 0.5f, 0.5f};
-    std::vector<float> scale = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};
+/*    std::vector<float> mean = {0.5f, 0.5f, 0.5f};
+    std::vector<float> scale = {1 / 0.5f, 1 / 0.5f, 1 / 0.5f};*/
 
     cv::Mat img;
     rgbaImage.copyTo(img);
     cv::Mat crop_img;
 
+    LOGI("img: %d, %d", img.cols, img.rows);
+
     std::vector<std::string> rec_text;
     std::vector<float> rec_text_score;
     for (int i = boxes.size() - 1; i >= 0; i--) {
         crop_img = GetRotateCropImage(img, boxes[i]);
+//        LOGI("crop_img: %d, %d, x:%d, %d, y:%d, %d", crop_img.cols, crop_img.rows,boxes[i][0][0], boxes[i][1][0], boxes[i][0][1], boxes[i][1][1]);
+
         if (use_direction_classify >= 1) {
             crop_img =
                     clsPredictor_->Predict(crop_img, nullptr, nullptr, nullptr, 0.9);
@@ -317,21 +329,30 @@ bool Pipeline::Process(std::string img_path, std::string output_img_path) {
                                           charactor_dict_);
         rec_text.push_back(res.first);
         rec_text_score.push_back(res.second);
+
+        crop_img.release();
     }
     auto end = std::chrono::system_clock::now();
     auto duration =
             std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+    LOGI("used time: %d ms, size:%d", int((double(duration.count()) *
+                                           std::chrono::microseconds::period::num /
+                                           std::chrono::microseconds::period::den) * 1000),
+         rec_text.size());
+
     //// visualization
     auto img_vis = Visualization(rgbaImage, boxes, output_img_path);
+
+
     // print recognized text
     for (int i = 0; i < rec_text.size(); i++) {
-        std::cout << i << "\t" << rec_text[i] << "\t" << rec_text_score[i]
-                  << std::endl;
+        LOGI("line: %d %s  %f", i, rec_text[i].c_str(), rec_text_score[i]);
     }
-    std::cout << "花费了"
-              << double(duration.count()) *
-                 std::chrono::microseconds::period::num /
-                 std::chrono::microseconds::period::den
-              << "秒" << std::endl;
+
+    img.release();
+    srcimg.release();
+    rgbaImage.release();
+
     return true;
 }

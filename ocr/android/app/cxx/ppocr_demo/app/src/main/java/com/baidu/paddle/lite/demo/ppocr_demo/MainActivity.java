@@ -19,6 +19,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.baidu.paddle.lite.demo.common.CameraSurfaceView;
+import com.baidu.paddle.lite.demo.common.SDKExceptions;
 import com.baidu.paddle.lite.demo.common.Utils;
 
 import java.io.File;
@@ -44,8 +45,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     protected String clsModelPath = "models/pp-lcnet_x0_25_textline_ori.nb";
     protected String labelPath = "labels/ppocr_keys_ocrv5.txt";
     protected String configPath = "config.txt";
-    protected int cpuThreadNum = 1;
-    protected String cpuPowerMode = "LITE_POWER_HIGH";
+    protected int cpuThreadNum = 4;
+    protected String cpuPowerMode = "LITE_POWER_HIGH"; // LITE_POWER_NO_BIND  LITE_POWER_HIGH
 
 
     Native predictor = new Native();
@@ -73,7 +74,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.btn_switch) {
-            svPreview.switchCamera();
+            // svPreview.switchCamera();
         } else if (v.getId() == R.id.btn_switch) {
             SimpleDateFormat date = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
             synchronized (this) {
@@ -85,30 +86,36 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
 
     @Override
     public boolean onTextureChanged(int inTextureId, int outTextureId, int textureWidth, int textureHeight) {
-        String savedImagePath = "";
-        synchronized (this) {
-            savedImagePath = MainActivity.this.savedImagePath;
-        }
-        savedImagePath = Utils.getDCIMDirectory() + File.separator + "result.jpg";
-        boolean modified = predictor.process(inTextureId, outTextureId, textureWidth, textureHeight, savedImagePath);
-        if (!savedImagePath.isEmpty()) {
-            synchronized (this) {
-                MainActivity.this.savedImagePath = "";
-            }
-        }
-        lastFrameIndex++;
-        if (lastFrameIndex >= 30) {
-            final int fps = (int) (lastFrameIndex * 1e9 / (System.nanoTime() - lastFrameTime));
-            runOnUiThread(new Runnable() {
-                public void run() {
-                    tvStatus.setText(Integer.toString(fps) + "fps");
-                }
-            });
-            lastFrameIndex = 0;
-            lastFrameTime = System.nanoTime();
-        }
-        return modified;
+        return true;
     }
+
+//
+//    @Override
+//    public boolean onTextureChanged(int inTextureId, int outTextureId, int textureWidth, int textureHeight) {
+//        String savedImagePath = "";
+//        synchronized (this) {
+//            savedImagePath = MainActivity.this.savedImagePath;
+//        }
+//        savedImagePath = Utils.getDCIMDirectory() + File.separator + "result.jpg";
+//        boolean modified = predictor.process(inTextureId, outTextureId, textureWidth, textureHeight, savedImagePath);
+//        if (!savedImagePath.isEmpty()) {
+//            synchronized (this) {
+//                MainActivity.this.savedImagePath = "";
+//            }
+//        }
+//        lastFrameIndex++;
+//        if (lastFrameIndex >= 30) {
+//            final int fps = (int) (lastFrameIndex * 1e9 / (System.nanoTime() - lastFrameTime));
+//            runOnUiThread(new Runnable() {
+//                public void run() {
+//                    tvStatus.setText(Integer.toString(fps) + "fps");
+//                }
+//            });
+//            lastFrameIndex = 0;
+//            lastFrameTime = System.nanoTime();
+//        }
+//        return modified;
+//    }
 
     @Override
     protected void onResume() {
@@ -119,13 +126,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
 /*        if (!checkAllPermissions()) {
             svPreview.disableCamera();
         }*/
-        svPreview.onResume();
+        //  svPreview.onResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        svPreview.onPause();
+        //   svPreview.onPause();
     }
 
     @Override
@@ -137,8 +144,8 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     }
 
     public void initView() {
-        svPreview = (CameraSurfaceView) findViewById(R.id.sv_preview);
-        svPreview.setOnTextureChangedListener(this);
+       /* svPreview = (CameraSurfaceView) findViewById(R.id.sv_preview);
+        svPreview.setOnTextureChangedListener(this);*/
         tvStatus = (TextView) findViewById(R.id.tv_status);
         btnSwitch = (ImageButton) findViewById(R.id.btn_switch);
         btnSwitch.setOnClickListener(this);
@@ -149,47 +156,74 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     public void checkRun() {
         try {
             Utils.copyAssets(this, labelPath);
-            String labelRealDir = new File(
-                    this.getCacheDir().toString(),
-                    labelPath).getAbsolutePath();
+            String labelRealDir = new File(this.getCacheDir().toString(), labelPath).getAbsolutePath();
 
             Utils.copyAssets(this, configPath);
-            String configRealDir = new File(
-                    this.getCacheDir().toString(),
-                    configPath).getAbsolutePath();
+            String configRealDir = new File(this.getCacheDir().toString(), configPath).getAbsolutePath();
 
             Utils.copyAssets(this, detModelPath);
-            String detRealModelDir = new File(
-                    this.getCacheDir().toString(),
-                    detModelPath).getAbsolutePath();
+            String detRealModelDir = new File(this.getCacheDir().toString(), detModelPath).getAbsolutePath();
 
             Utils.copyAssets(this, clsModelPath);
-            String clsRealModelDir = new File(
-                    this.getCacheDir().toString(),
-                    clsModelPath).getAbsolutePath();
+            String clsRealModelDir = new File(this.getCacheDir().toString(), clsModelPath).getAbsolutePath();
 
             Utils.copyAssets(this, recModelPath);
-            String recRealModelDir = new File(
-                    this.getCacheDir().toString(),
-                    recModelPath).getAbsolutePath();
+            String recRealModelDir = new File(this.getCacheDir().toString(), recModelPath).getAbsolutePath();
 
-            predictor.init(
-                    this,
-                    detRealModelDir,
-                    clsRealModelDir,
-                    recRealModelDir,
-                    configRealDir,
-                    labelRealDir,
-                    cpuThreadNum,
-                    cpuPowerMode);
+            predictor.init(this, detRealModelDir, clsRealModelDir, recRealModelDir, configRealDir, labelRealDir, cpuThreadNum, cpuPowerMode);
+
+            String image = "images/2025-08-01_145917_294.png";
+
+
+/*
+            image = "images/2025-08-01_145917_294.png";
+            predictor.processImage(new File(this.getCacheDir().toString(), image).getAbsolutePath(), new File(this.getCacheDir().toString(), getResultImagePath(image)).getAbsolutePath());
+*/
+
+            copyImage("images/1280.jpg");
+            copyImage("images/4.jpg");
+            copyImage("images/2025-08-01_145917_294.png");
+
+            image = "images/1280.jpg";
+            predictor.processImage(new File(this.getCacheDir().toString(), image).getAbsolutePath(), new File(this.getCacheDir().toString(), getResultImagePath(image)).getAbsolutePath());
+
+/*
+            predictor.release();
+            Thread.sleep(2000);
+            predictor.init(this, detRealModelDir, clsRealModelDir, recRealModelDir, configRealDir, labelRealDir, cpuThreadNum, cpuPowerMode);
+*/
+
+            image = "images/4.jpg";
+            predictor.processImage(new File(this.getCacheDir().toString(), image).getAbsolutePath(), new File(this.getCacheDir().toString(), getResultImagePath(image)).getAbsolutePath());
+
+/*
+            image = "images/1280.jpg";
+            predictor.processImage(new File(this.getCacheDir().toString(), image).getAbsolutePath(), new File(this.getCacheDir().toString(), getResultImagePath(image)).getAbsolutePath());
+*/
+
         } catch (Throwable e) {
             e.printStackTrace();
         }
     }
 
+    private void copyImage(String inputImagePath) {
+        try {
+            Utils.copyAssets(this, inputImagePath);
+        } catch (SDKExceptions.NoSDCardPermission e) {
+            throw new RuntimeException(e);
+        } catch (SDKExceptions.MissingModleFileInAssetFolder e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String getResultImagePath(String inputImagePath) {
+        String saveImage = inputImagePath.replace(".jpg", "_result.jpg");
+        saveImage = saveImage.replace(".png", "_result.png");
+        return saveImage;
+    }
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 /*        if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
             new AlertDialog.Builder(MainActivity.this)
@@ -207,12 +241,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Came
     }
 
     private void requestAllPermissions() {
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                Manifest.permission.CAMERA}, 0);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.CAMERA}, 0);
     }
 
     private boolean checkAllPermissions() {
-        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-                && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED;
     }
 }

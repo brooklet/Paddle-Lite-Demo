@@ -12,11 +12,11 @@
         android:layout_height="match_parent"
         android:background="@color/colorWindow">
 
-        <com.baidu.paddle.lite.demo.common.CameraSurfaceView
+<!--        <com.baidu.paddle.lite.demo.common.CameraSurfaceView
             android:id="@+id/sv_preview"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_centerInParent="true" />
+            android:layout_centerInParent="true" />-->
 
         <RelativeLayout
             android:layout_width="@dimen/top_bar_height"

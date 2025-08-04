@@ -48,6 +48,13 @@ public class Native {
         return run_status;
     }
 
+    public boolean processImage(String inputImagePath, String savedImagePath) {
+        if (ctx == 0) {
+            return false;
+        }
+        run_status = nativeProcessImage(ctx, inputImagePath, savedImagePath);
+        return run_status;
+    }
 
     public static native long nativeInit(String detModelPath,
                                          String clsModelPath,
@@ -60,4 +67,7 @@ public class Native {
     public static native boolean nativeRelease(long ctx);
 
     public static native boolean nativeProcess(long ctx, int inTextureId, int outTextureId, int textureWidth, int textureHeight, String savedImagePath);
+
+    public static native boolean nativeProcessImage(long ctx, String inputImagePath, String savedImagePath);
+
 }

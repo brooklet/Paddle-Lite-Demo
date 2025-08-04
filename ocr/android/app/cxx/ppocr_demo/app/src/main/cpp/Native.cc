@@ -77,6 +77,23 @@ Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeProcess(
                                  savedImagePath);
 }
 
+extern "C"
+JNIEXPORT jboolean JNICALL
+Java_com_baidu_paddle_lite_demo_ppocr_1demo_Native_nativeProcessImage(JNIEnv *env, jclass clazz,
+                                                                      jlong ctx,
+                                                                      jstring input_image_path,
+                                                                      jstring saved_image_path) {
+    if (ctx == 0) {
+        return JNI_FALSE;
+    }
+
+    std::string inputImagePath = jstring_to_cpp_string(env, input_image_path);
+    std::string savedImagePath = jstring_to_cpp_string(env, saved_image_path);
+    Pipeline *pipeline = reinterpret_cast<Pipeline *>(ctx);
+    return pipeline->Process(inputImagePath,
+                             savedImagePath);
+}
+
 #ifdef __cplusplus
 }
 #endif
